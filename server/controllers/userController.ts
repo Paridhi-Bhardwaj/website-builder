@@ -259,35 +259,51 @@ export const getUserProjects = async (req: Request, res: Response) => {
         }
 
 //Controller function to toggle proejct publish 
+// Controller function to toggle project publish
 export const togglePublish = async (req: Request, res: Response) => {
-    try {
-      const userId = req.userId;
-      if(!userId){
-          return res.status(401).json({ message: 'Unauthorized' });
-        }
-        
-        const {projectId} = req.params;
+  try {
+    const userId = req.userId;
 
-        const project = await prisma.websiteProject.findUnique({
-            where: {id: projectId, userId}
-          })
-          
-          if (!project) {
-            return res.status(404).json({ message: 'Project not found' })
-          }
-          
-          const updatedProject = await prisma.websiteProject.update({
-            where: {id: projectId},
-            data: { isPublished: !project.isPublished }
-          })
-          
-          res.json({ message: updatedProject.isPublished ? 'Project Unpublished' : 'Project Publish Successfully' })
-          
-        } catch (error : any) {
-          console.log(error.code || error.message);
-          res.status(500).json({ message: error.message });
-        }
-        }
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ FIX 1: force projectId to string
+    const projectId = req.params.projectId as string;
+
+    // ✅ FIX 2: use findFirst (NOT findUnique)
+    const project = await prisma.websiteProject.findFirst({
+      where: {
+        id: projectId,
+        userId: userId,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const updatedProject = await prisma.websiteProject.update({
+      where: {
+        id: project.id, // ✅ always safe
+      },
+      data: {
+        isPublished: !project.isPublished,
+      },
+    });
+
+    return res.json({
+      message: updatedProject.isPublished
+        ? "Project Published"
+        : "Project Unpublished",
+    });
+
+  } catch (error: any) {
+    console.error(error.message);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 
         // Contoller Function to Puchase Credits 
         export const purchaseCredits = async (req: Request, res: Response) => {

@@ -197,6 +197,7 @@ The user wants this change: "${enhancedPrompt}"`
 
 
 // Controller function to rollback to a specific version
+// Controller function to rollback to a specific version
 export const rollbackToVersion = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
@@ -205,9 +206,12 @@ export const rollbackToVersion = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { projectId, versionId } = req.params;
+    // ✅ FIX 1: extract params safely
+    const projectId = req.params.projectId as string;
+    const versionId = req.params.versionId as string;
 
-    const project = await prisma.websiteProject.findUnique({
+    // ✅ FIX 2: use findFirst + include versions
+    const project = await prisma.websiteProject.findFirst({
       where: {
         id: projectId,
         userId: userId,
@@ -218,21 +222,22 @@ export const rollbackToVersion = async (req: Request, res: Response) => {
     });
 
     if (!project) {
-      return res.status(401).json({ message: "Project not found" });
+      return res.status(404).json({ message: "Project not found" });
     }
 
+    // ✅ FIX 3: correct version typing
     const version = project.versions.find(
-      (version: { id: string | string[]; }) => version.id === versionId
+      (v) => v.id === versionId
     );
 
     if (!version) {
       return res.status(404).json({ message: "Version not found" });
     }
 
+    // ✅ FIX 4: update by UNIQUE id only
     await prisma.websiteProject.update({
       where: {
         id: project.id,
-        userId: userId,
       },
       data: {
         current_code: version.code,
@@ -249,15 +254,17 @@ export const rollbackToVersion = async (req: Request, res: Response) => {
       },
     });
 
-    return res.json({ message: "Version rolled back" });
+    return res.json({ message: "Version rolled back successfully" });
   } catch (error: any) {
-    console.error(error.code || error.message);
+    console.error(error.message);
     return res.status(500).json({ message: error.message });
   }
 };
 
 
+
 //Controller function to delete a Project
+// Controller function to delete a Project
 export const deleteProject = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
@@ -266,11 +273,13 @@ export const deleteProject = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { projectId } = req.params;
+    // ✅ FIX 1: cast projectId to string
+    const projectId = req.params.projectId as string;
 
-    const project = await prisma.websiteProject.findUnique({
+    // ✅ FIX 2: use findFirst (not findUnique)
+    const project = await prisma.websiteProject.findFirst({
       where: {
-        id: project.id,
+        id: projectId,
         userId: userId,
       },
     });
@@ -279,10 +288,10 @@ export const deleteProject = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    // ✅ FIX 3: delete using UNIQUE field only
     await prisma.websiteProject.delete({
       where: {
         id: project.id,
-        userId: userId,
       },
     });
 
@@ -294,19 +303,21 @@ export const deleteProject = async (req: Request, res: Response) => {
       },
     });
 
-    return res.json({ message: "Project deleted" });
+    return res.json({ message: "Project deleted successfully" });
   } catch (error: any) {
-    console.error(error.code || error.message);
+    console.error(error.message);
     return res.status(500).json({ message: error.message });
   }
 };
+
 
 
 // Controller for getting project code for preview
 export const getProjectPreview = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
+
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -357,7 +368,8 @@ export const getPublishedProjects = async (req: Request, res: Response) => {
 // Get a single published project by id
 export const getProjectById = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
+
 
     const project = await prisma.websiteProject.findFirst({
       where: {
@@ -384,7 +396,8 @@ export const getProjectById = async (req: Request, res: Response) => {
 export const saveProjectCode = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
+
     const { code } = req.body;
 
     if (!userId) {
@@ -395,7 +408,7 @@ export const saveProjectCode = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Code is required" });
     }
 
-    const project = await prisma.websiteProject.findUnique({
+    const project = await prisma.websiteProject.findFirst({
       where: {
         id: projectId,
         userId: userId,
