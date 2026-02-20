@@ -7,7 +7,9 @@
     "scripts": {
         "dev": "nodemon --exec tsx server.ts",
         "build": "tsc",
-        "start": "node dist/server.js"
+        "start": "node dist/server.js",
+        "postinstall": "prisma generate",
+        "migrate": "prisma migrate deploy"
     },
     "keywords": [],
     "author": "",

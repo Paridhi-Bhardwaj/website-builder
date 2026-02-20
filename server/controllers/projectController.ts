@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import openai from '../Configs/openai.js';
+import { Version } from '../src/generated/client/browser.js';
 
 
 /**
@@ -227,7 +228,7 @@ export const rollbackToVersion = async (req: Request, res: Response) => {
 
     // ✅ FIX 3: correct version typing
     const version = project.versions.find(
-      (v) => v.id === versionId
+      (v: Version) => v.id === versionId
     );
 
     if (!version) {

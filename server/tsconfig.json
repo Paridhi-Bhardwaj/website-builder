@@ -2,7 +2,9 @@
     "compilerOptions": {
       "target": "ES2020",
       "module": "NodeNext",
-      "moduleResolution": "NodeNext",
+"moduleResolution": "NodeNext",
+
+
   
      "outDir": "./dist" ,
       "rootDir": ".",
@@ -15,6 +17,6 @@
       "resolveJsonModule": true
     },
     "include": ["server.ts", "lib", "Routes", "controllers","**/*.ts", "types"],
-    "exclude": ["node_modules", "dist"],
+    "exclude": ["dist"],
   }
   
