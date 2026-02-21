@@ -5,9 +5,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { Providers } from "./providers.tsx"
 
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
-    <Providers>
-      <App />
-    </Providers>
-  </BrowserRouter>
+  <BrowserRouter basename="/website-builder">
+  <Providers>
+    <App />
+  </Providers>
+</BrowserRouter>
 )
